@@ -1,4 +1,5 @@
 import { ClerkProvider } from '@clerk/nextjs'
+import { arSA } from '@clerk/localizations'
 import './globals.css'
 
 export default function RootLayout({
@@ -7,9 +8,9 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <ClerkProvider>
+    <ClerkProvider localization={arSA}>
       <html lang="ar" dir="rtl">
-        <body>{children}</body>
+        <body className="antialiased">{children}</body>
       </html>
     </ClerkProvider>
   )
