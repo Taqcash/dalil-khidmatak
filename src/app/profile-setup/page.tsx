@@ -16,8 +16,24 @@ export default function ProfileSetup() {
   const [phone, setPhone] = useState('');
   const [idPublicId, setIdPublicId] = useState('');
   const [isVerified, setIsVerified] = useState(false);
+  const [aiStatus, setAiStatus] = useState('');
 
   const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || "");
+
+  const analyzeIdWithGemini = async (imageUrl: string) => {
+    setAiStatus('جاري تحليل الهوية ذكياً... 🧠');
+    try {
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+      const prompt = "حلل هذه الصورة لبطاقة هوية سودانية واستخرج الاسم الكامل. أجب بـ 'تم التحقق' إذا كانت البطاقة واضحة.";
+      const result = await model.generateContent([prompt, imageUrl]);
+      console.log(result.response.text());
+      setIsVerified(true);
+      setAiStatus('تم التحقق من الهوية بنجاح ✅');
+    } catch (error) {
+      console.error(error);
+      setAiStatus('فشل التحقق الآلي، سيتم المراجعة يدوياً.');
+    }
+  };
 
   const handleSave = async () => {
     if (!user) return;
@@ -47,14 +63,14 @@ export default function ProfileSetup() {
     <div className="min-h-screen bg-[#F5F5F5] flex items-center justify-center p-6 text-right" dir="rtl">
       <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 border-t-8 border-[#800020]">
         <h2 className="text-2xl font-bold text-gray-800 mb-2">إكمال الملف الشخصي</h2>
-        <p className="text-gray-500 mb-8">أهلاً بك يا حذوفي، أكمل بياناتك لتنطلق</p>
+        <p className="text-gray-500 mb-8">سجل بياناتك لتظهر لزبائن بورتسودان</p>
 
         <div className="space-y-5">
           <CldUploadWidget
             uploadPreset="dalil_preset"
             onSuccess={(result: any) => {
               setIdPublicId(result.info.public_id);
-              setIsVerified(true); // سنفترض التحقق مؤقتاً عند الرفع الناجح
+              analyzeIdWithGemini(result.info.secure_url);
             }}
           >
             {({ open }) => (
@@ -67,6 +83,8 @@ export default function ProfileSetup() {
               </button>
             )}
           </CldUploadWidget>
+
+          {aiStatus && <p className="text-xs text-center text-[#800020] font-medium">{aiStatus}</p>}
 
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1">رقم التواصل</label>
